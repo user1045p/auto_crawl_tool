@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>home</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css'>
+  <link rel="stylesheet" href="./job.css">
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/js/bootstrap.min.js'></script>
+  <!-- 引入Vue.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="./job.js"></script>
+</head>
+
+<body style="background: linear-gradient(to left, #caf0ae, #90ddc4);">
+  <div class="container" id="app">
+    <div id="content">
+      <h1 id="title" class="text-center">前程无忧</h1>
+      <p id="description" class="text-center">Be sure to let us know how can we improve our services</p>
+      <form id="form-info">
+        <div class="row">
+          <div id="info" class="col">
+            <div class="form-group">
+              <label id="jd-label" for="jd">&#8727; 岗位</label>
+              <input type="text" class="form-control" placeholder="Java 开发" autofocus required v-model="info.jd" />
+            </div>
+            <div class="form-group">
+              <label id="area-label" for="area">&#8727; 城市和区域</label>
+              <div style="display: flex;">
+                <select class="form-control form-control-sm" style="width: 30%;" v-model="info.areaId"
+                  @change="handleChange">
+                  <option value="" disabled selected>请选择</option>
+                  <option v-for="item in areas" :key="item.code" :label="item.label" :value="item.code">
+                    {{item.name}}
+                  </option>
+                </select>
+                <select class="form-control form-control-sm" style="width: 30%;margin-left: 5px;"
+                  v-model="info.countyId" @change="handleChange">
+                  <option value="" disabled selected>请选择</option>
+                  <option v-for="item in initCounty" :key="item.code" :label="item.label" :value="item.code">
+                    {{item.name}}
+                  </option>
+                </select>
+                <select class="form-control form-control-sm" style="width: 30%;margin-left: 5px;"
+                  v-model="info.streetId">
+                  <option value="" disabled selected>请选择</option>
+                  <option v-for="item in initStreet" :key="item.code" :label="item.label" :value="item.code">
+                    {{item.name}}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label id="number-label" for="number">工作经验</label>
+              <select class="form-control form-control-sm" v-model="info.experience">
+                <option value="" disabled selected>请选择工作经验</option>
+                <option v-for="item in experienceList" :key="item.code" :label="item.name" :value="item.code">
+                  {{item.name}}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label id="dropdown-label">学历</label>
+              <select class="form-control form-control-sm" v-model="info.degree">
+                <option value="" disabled selected>请选择学历</option>
+                <option v-for="item in degreeList" :key="item.code" :label="item.name" :value="item.code">
+                  {{item.name}}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div id="questionnaire" class="col">
+            <div class="form-group">
+              <label id="dropdown-label">求职类型</label>
+              <select class="form-control form-control-sm" v-model="info.jobType">
+                <option value="" disabled selected>请选择求职类型</option>
+                <option v-for="item in jobTypeList" :key="item.code" :label="item.name" :value="item.code">
+                  {{item.name}}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>公司行业</label>
+              <select class="form-control form-control-sm" v-model="info.hangye">
+                <option value="" disabled selected>待定开发</option>
+                <!-- <option>Student</option>
+                <option>Part-time job</option>
+                <option>Full-time job</option>
+                <option>Prefer not to say</option>
+                <option>Other</option> -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label id="dropdown-label">薪资待遇</label>
+              <select id="dropdown" class="form-control form-control-sm" v-model="info.salary">
+                <option value="" disabled selected>请选择薪资区间</option>
+                <option v-for="item in salaryList" :key="item.code" :label="item.name" :value="item.code">
+                  {{item.name}}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label id="dropdown-label">活跃程度</label>
+              <select id="dropdown" class="form-control form-control-sm" v-model="info.active">
+                <option value="" disabled selected>请选择活跃度</option>
+                <option v-for="item in activeList" :key="item.code" :label="item.name" :value="item.code">
+                  {{item.name}}
+                </option>
+              </select>
+              <small id="submitHelp" class="form-text">&#8727; 根据频率投递有效增加回复的机率.</small>
+            </div>
+          </div>
+          <div id="comments" class="col">
+            <div class="form-group">
+              <label for="textarea">打招呼语(使用回车键可分句发送)：</label>
+              <textarea class="form-control" id="textarea" rows="11" style="height: 80px;"
+                placeholder="enter your message..." v-model="info.greeting"></textarea>
+              <small id="submitHelp" class="form-text">&#8727; 有效的沟通能大大增加成功的概率.</small>
+            </div>
+            <label class="form-check-label" for="">&#8727; 选择你要登录平台的方式</label>
+            <div class="custom-control custom-radio">
+              <input class="custom-control-input" type="radio" name="radios" id="radio1" value="option1"
+                v-model="option" checked required />
+              <label class="custom-control-label" for="radio1">
+                扫码登录（推荐）
+              </label>
+            </div>
+            <div class="custom-control custom-radio">
+              <input class="custom-control-input" type="radio" name="radios" id="radio2" value="option2"
+                v-model="option" required />
+              <label class="custom-control-label" for="radio2">
+                cookie
+              </label>
+            </div>
+            <textarea class="form-control" id="textarea" rows="11" placeholder="enter your cookie..."
+              style="height: 80px;margin-top: 5px;" v-model="info.cookie" :disabled="cookieFlag"></textarea>
+            <button id="submit" type="button" class="btn btn-primary" style="margin-top: 8%"
+              @click="submitForm">Submit</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // 创建一个新的Vue实例或应用
+    new Vue({
+      el: '#app',
+      data: {
+        info: {
+          jd: '',
+          areaId: '030000',
+          countyId: '',
+          streetId: '',
+          degree: '',
+          experience: '',
+          jobType: '',
+          salary: '',
+          greeting: "",
+          cookie: "",
+          active: 3,
+        },
+        option: 'option1',
+        cookieFlag: true,
+        initCounty: [],
+        initStreet: [],
+        areas: getAreaList(),
+        county: getCountyList(),
+        street: [],
+        experienceList: getExperienceList(),
+        degreeList: getDegreeList(),
+        jobTypeList: getJobTypeList(),
+        salaryList: getSalaryList(),
+        activeList: getActiveList(),
+      },
+      mounted: function () {
+          // this.getCookie();
+      },
+      watch: {
+        'option': {
+          handler(newVal, oldVal) {
+            if (newVal == 'option2') {
+              this.info.option='option2'
+              this.$set(this.info, 'option', "option2");
+              this.cookieFlag = false;
+            } else {
+              this.info.option='option1'
+              this.$set(this.info, 'option', "option1");
+              this.cookieFlag = true;
+              this.info.cookie = ''
+            }
+          },
+          immediate: true
+        },
+        'info.areaId': {
+          handler(newVal, oldVal) {
+            this.info.countyId = '';
+            this.info.streetId = '';
+            this.handleChange();
+          },
+          immediate: true
+        },
+        'info.countyId': {
+          handler(newVal, oldVal) {
+            this.info.streetId = '';
+          }
+        }
+      },
+      methods: {
+        handleChange() {
+          let tempCounty = [];
+          let tempStreet = [];
+          if (this.info.areaId != '') {
+            this.areas.forEach(item => {
+              if (item['code'] == this.info.areaId) {
+                tempCounty = item['sub'];
+              }
+            });
+            this.initCounty = tempCounty;
+          } else {
+            this.initCounty = [];
+          }
+          if (this.info.countyId) {
+            console.log(this.info.countyId,this.initCounty);
+            this.initCounty.forEach(item => {
+              if (item['code'] == this.info.countyId) {
+                tempStreet = item['sub'];
+              }
+            });
+            this.initStreet = tempStreet;
+          } else {
+            this.initStreet = [];
+          }
+          console.log(this.info.areaId, this.info.countyId)
+        },
+        submitForm() {
+          if (this.info.greeting == "") {
+            alert("打招呼语句不能为空");
+            return;
+          }
+          if (this.info.areaId != "" && this.info.jd != "") {
+            // 使用ajax发送请求
+            $.ajax({
+              url: '/api/job/start-auto-chat',
+              method: 'POST',
+              data: {
+                jd: this.info.jd,
+                areaId: this.info.areaId,
+                countyId: this.info.countyId,
+                streetId: this.info.streetId,
+                degree: this.info.degree,
+                experience: this.info.experience,
+                jobType: this.info.jobType,
+                salary: this.info.salary,
+                greeting: this.info.greeting,
+                cookie: this.info.cookie
+              },
+              success: function (response) {
+                // 请求成功时的回调函数
+                console.log(response);
+              },
+              error: function (xhr, status, error) {
+                // 请求失败时的回调函数
+                console.error(error);
+              }
+            });
+          } else {
+            alert("岗位和地区信息不能为空");
+          }
+          // 处理提交逻辑
+        },
+        getCookie() {
+          //发送请求获取cookie,并填充页面
+          $.ajax({
+            url: '/api/zhipin/obtain-cookie',
+            method: 'GET',
+            data: {
+            },
+            success: (response) => {
+              // 请求成功时的回调函数
+              if (response != '') {
+                this.info.cookie = response
+                this.$set(this.info, 'option', "option2");
+                this.cookieFlag = false;
+              } else {
+                this.info.cookie = response
+                this.$set(this.info, 'option', "option1");
+                this.cookieFlag = true;
+              }
+              this.$forceUpdate()
+            },
+            error: function (xhr, status, error) {
+              // 请求失败时的回调函数
+              console.error(error);
+            }
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

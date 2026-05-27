@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定时任务管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #2c3e50, #4a6582);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.8rem;
+        }
+
+        .header h1 i {
+            color: #42b983;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #42b983, #3aa374);
+            color: white;
+            box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #606266;
+        }
+
+        tr:hover {
+            background-color: #f5f7fa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #e1f3d8;
+            color: #67c23a;
+        }
+
+        .status-inactive {
+            background-color: #fef0f0;
+            color: #f56c6c;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: #606266;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: #f5f7fa;
+        }
+
+        .action-btn.edit:hover {
+            color: #409eff;
+        }
+
+        .action-btn.enable:hover {
+            color: #67c23a;
+        }
+
+        .action-btn.disable:hover {
+            color: #e6a23c;
+        }
+
+        .action-btn.delete:hover {
+            color: #f56c6c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #303133;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #909399;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #606266;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #42b983;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+            pointer-events: none;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            background-color: #f0f9ff;
+            border: 1px solid #b3e0ff;
+            color: #0066cc;
+        }
+
+        .notification-error {
+            background-color: #fff0f0;
+            border: 1px solid #ffcaca;
+            color: #cc0000;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-icon {
+            font-size: 1.2rem;
+        }
+
+        .notification-success .notification-icon {
+            color: #67c23a;
+        }
+
+        .notification-error .notification-icon {
+            color: #f56c6c;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #909399;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #dcdfe6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #42b983;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .cron-hint {
+            font-size: 0.85rem;
+            color: #909399;
+            margin-top: 5px;
+        }
+
+        .cron-error {
+            color: #f56c6c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* 优化过渡效果 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+        .fade-enter, .fade-leave-to {
+            opacity: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .table-container {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+            }
+            
+            .actions {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+            
+            .notification {
+                max-width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tasks"></i> 定时任务管理</h1>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                <i class="fas fa-plus"></i> 创建任务
+            </button>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px;">加载中...</p>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-tasks"></i>
+                <h3>暂无定时任务</h3>
+                <p>点击"创建任务"按钮添加新的定时任务</p>
+            </div>
+            
+            <div id="tableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>任务名称</th>
+                            <th>CRON表达式</th>
+                            <th>描述</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>更新时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTableBody">
+                        <!-- 任务数据将通过JavaScript动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 消息提示弹窗 -->
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span id="notificationMessage"></span>
+        </div>
+    </div>
+    
+    <!-- 创建/编辑任务模态框 -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">创建任务</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId">
+                    <div class="form-group">
+                        <label for="taskName">任务名称 *</label>
+                        <input type="text" id="taskName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskCron">CRON表达式 *</label>
+                        <input type="text" id="taskCron" class="form-control" placeholder="例如: 0 0 9 * * *" required>
+                        <div class="cron-hint">格式: 秒 分 时 日 月 周 (例如: 0 0 9 * * * 表示每天上午9点执行)</div>
+                        <div id="cronError" class="cron-error"></div>
+                    </div>
+                    <!-- 添加HTTP请求任务配置 -->
+                    <div class="form-group">
+                        <label for="taskUrl">请求URL</label>
+                        <input type="text" id="taskUrl" class="form-control" placeholder="例如: http://localhost:3000/api/boss/start-auto-chat">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskMethod">请求方法</label>
+                        <select id="taskMethod" class="form-control">
+                            <option value="">不使用HTTP请求</option>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskParams">请求参数 (JSON格式)</label>
+                        <textarea id="taskParams" class="form-control" rows="4" placeholder='例如: {"jd":"Java","areaId":"101280100","active":3}'></textarea>
+                        <div class="cron-hint">请输入有效的JSON格式参数</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskHeaders">请求头 (JSON格式)</label>
+                        <textarea id="taskHeaders" class="form-control" rows="3" placeholder='例如: {"Content-Type":"application/json"}'></textarea>
+                        <div class="cron-hint">请输入有效的JSON格式请求头</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDescription">描述</label>
+                        <textarea id="taskDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="taskEnabled" checked>
+                            <label for="taskEnabled">启用任务</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveTask()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        const API_BASE = '/api/tasks';
+        let editingTaskId = null;
+        let notificationTimeout = null;
+        let currentTasks = []; // 保存当前任务列表
+        
+        // 定义CronJob类用于前端验证
+        class CronJob {
+          constructor(cronTime, onTick, onComplete, start, timezone, context, runOnInit, unrefTimeout) {
+            // 简化的实现，仅用于验证cron表达式
+            this.cronTime = cronTime;
+            this._validate();
+          }
+          
+          _validate() {
+            // 基本验证规则
+            const parts = this.cronTime.split(' ');
+            if (parts.length !== 6) {
+              throw new Error('Cron表达式必须包含6个部分: 秒 分 时 日 月 周');
+            }
+            
+            // 验证每个部分
+            for (let i = 0; i < parts.length; i++) {
+              if (!this._isValidCronPart(parts[i], i)) {
+                throw new Error(`无效的Cron表达式部分: ${parts[i]}`);
+              }
+            }
+          }
+          
+          _isValidCronPart(value, index) {
+            // 允许的值:
+            // 0: 秒 (0-59)
+            // 1: 分 (0-59)
+            // 2: 时 (0-23)
+            // 3: 日 (1-31)
+            // 4: 月 (1-12 或者 JAN-DEC)
+            // 5: 周 (0-7 或者 SUN-SAT, 0和7都表示周日)
+            
+            if (value === '*') return true;
+            if (value === '?') return true;
+            
+            // 处理范围和步长
+            if (value.includes('/')) {
+              const [range, step] = value.split('/');
+              if (!/^\d+$/.test(step)) return false;
+              if (range === '*') return true;
+              if (range.includes('-')) {
+                const [start, end] = range.split('-');
+                return /^\d+$/.test(start) && /^\d+$/.test(end);
+              }
+              return /^\d+$/.test(range);
+            }
+            
+            if (value.includes('-')) {
+              const [start, end] = value.split('-');
+              return /^\d+$/.test(start) && /^\d+$/.test(end);
+            }
+            
+            // 处理逗号分隔的列表
+            if (value.includes(',')) {
+              return value.split(',').every(part => this._isValidCronPart(part, index));
+            }
+            
+            // 处理数字
+            if (/^\d+$/.test(value)) {
+              const num = parseInt(value, 10);
+              switch (index) {
+                case 0: return num >= 0 && num <= 59; // 秒
+                case 1: return num >= 0 && num <= 59; // 分
+                case 2: return num >= 0 && num <= 23; // 时
+                case 3: return num >= 1 && num <= 31; // 日
+                case 4: return num >= 1 && num <= 12; // 月
+                case 5: return num >= 0 && num <= 7;  // 周
+                default: return false;
+              }
+            }
+            
+            // 处理月份名称
+            if (index === 4) {
+              const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+              return months.includes(value.toUpperCase());
+            }
+            
+            // 处理星期名称
+            if (index === 5) {
+              const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+              return days.includes(value.toUpperCase());
+            }
+            
+            return false;
+          }
+        }
+
+        // 页面加载完成后获取任务列表
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchTasks();
+        });
+
+        // 获取任务列表
+        async function fetchTasks() {
+            try {
+                showLoading(true);
+                const response = await fetch(API_BASE);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const tasks = await response.json();
+                currentTasks = tasks; // 保存当前任务列表
+                renderTasks(tasks);
+            } catch (error) {
+                console.error('获取任务列表失败:', error);
+                showNotification('获取任务列表失败: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 渲染任务列表
+        function renderTasks(tasks) {
+            const tbody = document.getElementById('taskTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            // 始终保持表格结构，避免页面闪烁
+            if (!tasks || tasks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #909399;">暂无定时任务</td></tr>';
+                emptyState.style.display = 'none'; // 隐藏独立的空状态
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = tasks.map(task => `
+                <tr>
+                    <td>${task.id}</td>
+                    <td>${escapeHtml(task.name)}</td>
+                    <td>${escapeHtml(task.cron)}</td>
+                    <td>${escapeHtml(task.description || '-')}</td>
+                    <td>
+                        <span class="status-badge status-${task.enabled ? 'active' : 'inactive'}">
+                            ${task.enabled ? '启用' : '禁用'}
+                        </span>
+                    </td>
+                    <td>${formatDate(task.createdAt)}</td>
+                    <td>${formatDate(task.updatedAt)}</td>
+                    <td class="actions">
+                        <button class="action-btn edit" onclick="openEditModal(${task.id})" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn ${task.enabled ? 'disable' : 'enable'}" 
+                                onclick="${task.enabled ? 'disableTask' : 'enableTask'}(${task.id})" 
+                                title="${task.enabled ? '禁用' : '启用'}">
+                            <i class="fas fa-${task.enabled ? 'pause' : 'play'}"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="deleteTask(${task.id})" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 打开创建任务模态框
+        function openCreateModal() {
+            editingTaskId = null;
+            document.getElementById('modalTitle').textContent = '创建任务';
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskId').value = '';
+            document.getElementById('taskEnabled').checked = true;
+            clearCronError();
+            document.getElementById('taskModal').classList.add('show');
+        }
+
+        // 打开编辑任务模态框
+        async function openEditModal(id) {
+            try {
+                const response = await fetch(`${API_BASE}/${id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const task = await response.json();
+                
+                editingTaskId = task.id;
+                document.getElementById('modalTitle').textContent = '编辑任务';
+                document.getElementById('taskId').value = task.id;
+                document.getElementById('taskName').value = task.name;
+                document.getElementById('taskCron').value = task.cron;
+                document.getElementById('taskDescription').value = task.description || '';
+                document.getElementById('taskEnabled').checked = task.enabled;
+                
+                // 设置HTTP请求相关字段
+                document.getElementById('taskUrl').value = task.url || '';
+                document.getElementById('taskMethod').value = task.method || '';
+                document.getElementById('taskParams').value = task.params ? JSON.stringify(task.params, null, 2) : '';
+                document.getElementById('taskHeaders').value = task.headers ? JSON.stringify(task.headers, null, 2) : '';
+                
+                clearCronError();
+                
+                document.getElementById('taskModal').classList.add('show');
+            } catch (error) {
+                console.error('获取任务详情失败:', error);
+                showNotification('获取任务详情失败: ' + error.message, 'error');
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('taskModal').classList.remove('show');
+        }
+
+        // 验证CRON表达式格式（简单验证）
+        function validateCronExpression(cron) {
+            // 简单的CRON表达式格式验证
+            // 格式: 秒 分 时 日 月 周
+            const cronRegex = /^(\*|[0-9]+|\*\/[0-9]+|[0-9]+-[0-9]+|\?)\s+(\*|[0-9]+|\*\/[0-9]+|[0-9]+-[0-9]+|\?)\s+(\*|[0-9]+|\*\/[0-9]+|[0-9]+-[0-9]+|\?)\s+(\*|[0-9]+|\*\/[0-9]+|[0-9]+-[0-9]+|\?)\s+(\*|[0-9]+|\*\/[0-9]+|[0-9]+-[0-9]+|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|\?)\s+(\*|[0-9]+|\*\/[0-9]+|[0-9]+-[0-9]+|SUN|MON|TUE|WED|THU|FRI|SAT|\?)$/;
+            
+            if (!cron) {
+                return "CRON表达式不能为空";
+            }
+            
+            // 额外验证：确保表达式可以被cron库解析
+            try {
+                new CronJob(cron, () => {});
+            } catch (e) {
+                return "CRON表达式格式不正确或不被支持: " + e.message;
+            }
+            
+            if (!cronRegex.test(cron)) {
+                return "CRON表达式格式不正确，请按照 秒 分 时 日 月 周 的格式输入";
+            }
+            
+            return null;
+        }
+
+        // 验证JSON格式
+        function validateJson(jsonString, fieldName) {
+            if (!jsonString) return null;
+            
+            try {
+                JSON.parse(jsonString);
+                return null;
+            } catch (e) {
+                return `${fieldName} 必须是有效的JSON格式: ${e.message}`;
+            }
+        }
+
+        // 显示CRON表达式错误
+        function showCronError(message) {
+            const errorElement = document.getElementById('cronError');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        // 清除CRON表达式错误
+        function clearCronError() {
+            const errorElement = document.getElementById('cronError');
+            errorElement.style.display = 'none';
+        }
+
+        // 保存任务
+        async function saveTask() {
+            const name = document.getElementById('taskName').value.trim();
+            const cron = document.getElementById('taskCron').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const enabled = document.getElementById('taskEnabled').checked;
+            
+            // HTTP请求相关字段
+            const url = document.getElementById('taskUrl').value.trim();
+            const method = document.getElementById('taskMethod').value;
+            const paramsText = document.getElementById('taskParams').value.trim();
+            const headersText = document.getElementById('taskHeaders').value.trim();
+            
+            if (!name) {
+                showNotification('任务名称不能为空', 'error');
+                return;
+            }
+            
+            // 验证CRON表达式
+            const cronError = validateCronExpression(cron);
+            if (cronError) {
+                showCronError(cronError);
+                return;
+            }
+            
+            // 验证参数JSON格式
+            const paramsError = validateJson(paramsText, '请求参数');
+            if (paramsError) {
+                showNotification(paramsError, 'error');
+                return;
+            }
+            
+            // 验证请求头JSON格式
+            const headersError = validateJson(headersText, '请求头');
+            if (headersError) {
+                showNotification(headersError, 'error');
+                return;
+            }
+            
+            try {
+                // 准备任务数据
+                const taskData = { 
+                    name: name, 
+                    cron: cron, 
+                    description: description, 
+                    enabled: enabled,
+                    url: url || undefined,
+                    method: method || undefined,
+                    params: paramsText ? JSON.parse(paramsText) : undefined,
+                    headers: headersText ? JSON.parse(headersText) : undefined
+                };
+                
+                // 移除值为undefined的属性
+                Object.keys(taskData).forEach(key => {
+                    if (taskData[key] === undefined) {
+                        delete taskData[key];
+                    }
+                });
+                
+                let response;
+                
+                if (editingTaskId) {
+                    // 更新任务
+                    response = await fetch(`${API_BASE}/${editingTaskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(taskData)
+                    });
+                } else {
+                    // 创建任务
+                    response = await fetch(API_BASE, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(taskData)
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                const task = await response.json();
+                closeModal();
+                
+                // 更新本地任务列表而不是重新获取
+                if (editingTaskId) {
+                    // 更新现有任务
+                    const index = currentTasks.findIndex(t => t.id === task.id);
+                    if (index !== -1) {
+                        currentTasks[index] = task;
+                    }
+                } else {
+                    // 添加新任务到列表开头
+                    currentTasks.unshift(task);
+                }
+                
+                renderTasks(currentTasks);
+                showNotification(editingTaskId ? '任务更新成功' : '任务创建成功', 'success');
+            } catch (error) {
+                console.error('保存任务失败:', error);
+                showNotification('保存任务失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除任务
+        async function deleteTask(id) {
+            if (!confirm('确定要删除这个任务吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                // 从本地任务列表中移除
+                currentTasks = currentTasks.filter(task => task.id !== id);
+                renderTasks(currentTasks);
+                showNotification('任务删除成功', 'success');
+            } catch (error) {
+                console.error('删除任务失败:', error);
+                showNotification('删除任务失败: ' + error.message, 'error');
+            }
+        }
+
+        // 启用任务
+        async function enableTask(id) {
+            try {
+                const response = await fetch(`${API_BASE}/${id}/enable`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                const task = await response.json();
+                
+                // 更新本地任务列表
+                const index = currentTasks.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    currentTasks[index] = task;
+                }
+                
+                renderTasks(currentTasks);
+                showNotification('任务已启用', 'success');
+            } catch (error) {
+                console.error('启用任务失败:', error);
+                showNotification('启用任务失败: ' + error.message, 'error');
+            }
+        }
+
+        // 禁用任务
+        async function disableTask(id) {
+            try {
+                const response = await fetch(`${API_BASE}/${id}/disable`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                const task = await response.json();
+                
+                // 更新本地任务列表
+                const index = currentTasks.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    currentTasks[index] = task;
+                }
+                
+                renderTasks(currentTasks);
+                showNotification('任务已禁用', 'success');
+            } catch (error) {
+                console.error('禁用任务失败:', error);
+                showNotification('禁用任务失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // 显示消息提示弹窗
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notificationMessage');
+            const iconElement = notification.querySelector('.notification-icon');
+            
+            // 清除之前的定时器
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            
+            // 设置消息内容和样式
+            messageElement.textContent = message;
+            
+            if (type === 'success') {
+                notification.className = 'notification notification-success show';
+                iconElement.className = 'notification-icon fas fa-check-circle';
+            } else {
+                notification.className = 'notification notification-error show';
+                iconElement.className = 'notification-icon fas fa-exclamation-circle';
+            }
+            
+            // 2秒后自动关闭
+            notificationTimeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // 转义HTML特殊字符
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('taskModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // 监听CRON输入框的变化，清除错误提示
+        document.getElementById('taskCron').addEventListener('input', function() {
+            clearCronError();
+        });
+    </script>
+</body>
+</html>

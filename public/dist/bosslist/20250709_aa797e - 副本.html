@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>招聘职位管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <script src='https://unpkg.com/axios@1.10.0/dist/axios.min.js'></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #caf0ae 0%, #90ddc4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* padding: 20px; */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            max-height: 800px;
+            width: 1200px;
+        }
+
+        header {
+            background: linear-gradient(90deg, #2c3e50, #4a6582);
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: rotate(30deg);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo i {
+            color: #42b983;
+            font-size: 2.2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+
+        .btn:hover::after {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #42b983, #3aa374);
+            color: white;
+            box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(90deg, #e0e0e0, #d1d1d1);
+            color: #333;
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #ff6b6b, #ff5252);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .search-bar {
+            padding: 20px 30px;
+            background: #f5f7fa;
+            border-bottom: 1px solid #ebeef5;
+            position: relative;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #42b983;
+            box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #909399;
+            font-size: 1.1rem;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #dcdfe6;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-item:hover {
+            border-color: #42b983;
+            transform: translateY(-2px);
+        }
+
+        .filter-item.active {
+            background: linear-gradient(90deg, #42b983, #3aa374);
+            color: white;
+            border-color: #42b983;
+            box-shadow: 0 4px 8px rgba(66, 185, 131, 0.3);
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            /* padding: 0 15px; */
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            font-size: 0.95rem;
+        }
+
+        thead {
+            background: #f5f7fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 16px 15px;
+            text-align: left;
+            color: #606266;
+            font-weight: 600;
+            border-bottom: 2px solid #ebeef5;
+            white-space: nowrap;
+        }
+
+        th i {
+            margin-left: 5px;
+            color: #909399;
+            font-size: 0.9rem;
+        }
+
+        td {
+            max-width: 18px;
+            padding: 16px 15px;
+            color: #606266;
+            border-bottom: 1px solid #ebeef5;
+        }
+
+        tr:hover td {
+            background-color: #f9fbfd;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .status.active {
+            background: #e1f3d8;
+            color: #67c23a;
+        }
+
+        .status.pending {
+            background: #fdf6ec;
+            color: #e6a23c;
+        }
+
+        .status.closed {
+            background: #fef0f0;
+            color: #f56c6c;
+        }
+
+        .salary {
+            font-weight: 700;
+            color: #e6a23c;
+            letter-spacing: 0.5px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #ecf5ff, #d9e7ff);
+            color: #409eff;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-right: 8px;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: #606266;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            color: #42b983;
+            background: #f5f7fa;
+            transform: scale(1.1);
+        }
+
+        .action-btn.delete:hover {
+            color: #ff6b6b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            border-top: 1px solid #ebeef5;
+            background: #f9fbfd;
+        }
+
+        .selection-info {
+            font-size: 0.95rem;
+            color: #606266;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .selection-info i {
+            color: #42b983;
+            font-size: 1.2rem;
+        }
+
+        .page-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dcdfe6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-btn:hover,
+        .page-btn.active {
+            border-color: #42b983;
+            color: #42b983;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(66, 185, 131, 0.2);
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #42b983, #3aa374);
+            color: white;
+            border-color: #42b983;
+        }
+
+        .footer {
+            padding: 15px 30px;
+            background: #f5f7fa;
+            border-top: 1px solid #ebeef5;
+            text-align: center;
+            color: #909399;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .footer .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .footer .stat-item i {
+            color: #42b983;
+        }
+
+        /* 全选样式 */
+        .select-all {
+            display: flex;
+            align-items: center;
+        }
+
+        .select-all input {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .row-select {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-width: 750px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95);
+            animation: scaleIn 0.3s ease forwards;
+        }
+
+        @keyframes scaleIn {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            background: linear-gradient(90deg, #2c3e50, #4a6582);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            transform: rotate(30deg);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .modal-title i {
+            color: #42b983;
+            font-size: 1.8rem;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            flex-grow: 1;
+            background: #f9fbfd;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+
+        .form-group label i {
+            color: #42b983;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #42b983;
+            box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-control::placeholder {
+            color: #c0c4cc;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 18px;
+            padding-right: 45px;
+        }
+
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 50px;
+            padding: 10px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            background: white;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #e8f4ff, #d6e8ff);
+            color: #409eff;
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .tag-remove {
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #409eff;
+            transition: all 0.2s;
+        }
+
+        .tag-remove:hover {
+            color: #ff6b6b;
+            transform: scale(1.2);
+        }
+
+        .tag-input input {
+            flex: 1;
+            min-width: 100px;
+            border: none;
+            padding: 8px 5px;
+            outline: none;
+            font-size: 1rem;
+            background: transparent;
+        }
+
+        textarea.form-control {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            background: #f5f7fa;
+            border-top: 1px solid #ebeef5;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .modal-footer .btn {
+            min-width: 120px;
+            font-weight: 600;
+            padding: 14px 25px;
+            font-size: 1.05rem;
+        }
+
+        @media (max-width: 900px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: auto;
+                max-height: none;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-options {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            th,
+            td {
+                padding: 12px 10px;
+                font-size: 0.9rem;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 800px;
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+        }
+
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(66, 185, 131, 0.2);
+            border-top: 5px solid #42b983;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #909399;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #dcdfe6;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #606266;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 主容器 -->
+        <div class="container">
+            <!-- 头部 -->
+            <header>
+                <div class="logo">
+                    <i class="fas fa-briefcase"></i>
+                    <span>招聘职位管理系统</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" @click="exportData">
+                        <i class="fas fa-download"></i> 导出数据
+                    </button>
+                    <button class="btn btn-primary" @click="openEditModal(null)">
+                        <i class="fas fa-plus"></i> 发布新职位
+                    </button>
+                </div>
+            </header>
+
+            <!-- 搜索区域 -->
+            <div class="search-bar">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" v-model="searchQuery" placeholder="搜索职位、公司或技能关键词..."
+                            @keyup.enter="searchJobs">
+                    </div>
+                    <button class="btn btn-primary" @click="searchJobs">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                </div>
+
+                <!-- <div class="filter-options">
+                    <div v-for="(filter, index) in filters" :key="index" class="filter-item"
+                        :class="{ active: activeFilter === filter.value }" @click="setFilter(filter.value)">
+                        <i :class="filter.icon"></i> {{ filter.label }}
+                    </div>
+                </div> -->
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="table-container">
+                <table v-if="filteredJobs.length > 0">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <div class="select-all">
+                                    <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                                </div>
+                            </th>
+                            <th @click="sortBy('name')">
+                                职位名称 <i class="fas fa-sort"></i>
+                            </th>
+                            <th @click="sortBy('company')">
+                                公司名称 <i class="fas fa-sort"></i>
+                            </th>
+                            <th @click="sortBy('salary')">
+                                薪资范围 <i class="fas fa-sort"></i>
+                            </th>
+                            <th @click="sortBy('education')">
+                                学历要求 <i class="fas fa-sort"></i>
+                            </th>
+                            <th @click="sortBy('area')">
+                                区域 <i class="fas fa-sort"></i>
+                            </th>
+                            <!-- <th @click="sortBy('status')">
+                                职位状态 <i class="fas fa-sort"></i>
+                            </th> -->
+                            <th @click="sortBy('matchDegree')">
+                                匹配度 <i class="fas fa-sort"></i>
+                            </th>
+                            <th @click="sortBy('createtime')">
+                                发布时间 <i class="fas fa-sort"></i>
+                            </th>
+                            <th style="width: 110px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="job in paginatedJobs" :key="job.id">
+                            <td><div class="select-all"><input type="checkbox" v-model="selectedJobs" :value="job.id"></div></td>
+                            <td>{{ job.name }}</td>
+                            <td>{{ job.company }}</td>
+                            <td class="salary">{{ job.salary }}</td>
+                            <td>{{ job.education }}</td>
+                            <td>{{ job.area }}</td>
+                            <!-- <td>
+                                <span :class="['status', job.status]">
+                                    {{ statusLabels[job.status] }}
+                                </span>
+                            </td> -->
+                            <td>{{ job.matchDegree }}</td>
+                            <td>{{ job.createTime }}</td>
+                            <td>
+                                <button class="action-btn" @click="openEditModal(job)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete" @click="deleteJob(job.id)">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div v-if="loading" class="loading-indicator">
+                    <div class="spinner"></div>
+                </div>
+
+                <div v-if="!loading && filteredJobs.length === 0" class="empty-state">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>没有找到匹配的职位</h3>
+                    <p>请尝试不同的搜索关键词或筛选条件</p>
+                    <button class="btn btn-primary" style="margin-top: 20px;" @click="resetFilters">
+                        <i class="fas fa-sync-alt"></i> 重置筛选
+                    </button>
+                </div>
+            </div>
+
+            <!-- 分页和选择信息 -->
+            <div class="pagination" v-if="filteredJobs.length > 0">
+                <div class="selection-info">
+                    <i class="fas fa-check-circle"></i>
+                    已选择 {{ selectedJobs.length }} 个项目
+                </div>
+                <div class="page-controls">
+                    <div class="page-btn" @click="prevPage" :disabled="currentPage === 1">
+                        <i class="fas fa-chevron-left"></i>
+                    </div>
+                    <div v-for="page in totalPages" :key="page" class="page-btn"
+                        :class="{ active: page === currentPage }" @click="setPage(page)">
+                        {{ page }}
+                    </div>
+                    <div class="page-btn" @click="nextPage" :disabled="currentPage === totalPages">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 页脚 -->
+            <div class="footer" v-if="filteredJobs.length > 0">
+                <div class="stats">
+                    <div class="stat-item">
+                        <i class="fas fa-briefcase"></i>
+                        <span>职位总数: {{ jobs.length }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-filter"></i>
+                        <span>筛选结果: {{ filteredJobs.length }}</span>
+                    </div>
+                </div>
+                <div>
+                    © 2023 招聘职位管理系统 | 基于BossEntity数据模型
+                </div>
+            </div>
+        </div>
+
+        <!-- 修改弹窗 -->
+        <div class="modal" :class="{ show: showModal }">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-edit"></i>
+                        {{ isNewJob ? '添加新职位' : '编辑职位信息' }}
+                    </div>
+                    <button class="close-btn" @click="closeModal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <!-- 第1行 -->
+                        <div class="form-group">
+                            <label for="jobTitle">
+                                <i class="fas fa-heading"></i>
+                                职位名称
+                            </label>
+                            <input type="text" v-model="currentJob.name" class="form-control"
+                                placeholder="例如：高级前端开发工程师">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company">
+                                <i class="fas fa-building"></i>
+                                公司名称
+                            </label>
+                            <input type="text" v-model="currentJob.company" class="form-control"
+                                placeholder="例如：腾讯科技有限公司">
+                        </div>
+
+                        <!-- 第2行 -->
+                        <div class="form-group">
+                            <label for="salary">
+                                <i class="fas fa-money-bill-wave"></i>
+                                薪资范围
+                            </label>
+                            <input type="text" v-model="currentJob.salary" class="form-control"
+                                placeholder="例如：30K-45K">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="education">
+                                <i class="fas fa-graduation-cap"></i>
+                                学历要求
+                            </label>
+                            <select v-model="currentJob.education" class="form-control">
+                                <option v-for="edu in educationOptions" :value="edu">{{ edu }}</option>
+                            </select>
+                        </div>
+
+                        <!-- 第3行 -->
+                        <div class="form-group">
+                            <label for="area">
+                                <i class="fas fa-map-marker-alt"></i>
+                                区域
+                            </label>
+                            <input type="text" v-model="currentJob.area" class="form-control" placeholder="例如：深圳南山区">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">
+                                <i class="fas fa-info-circle"></i>
+                                职位状态
+                            </label>
+                            <select v-model="currentJob.status" class="form-control">
+                                <option v-for="(label, key) in statusLabels" :value="key">{{ label }}</option>
+                            </select>
+                        </div>
+
+                        <!-- 第4行 -->
+                        <div class="form-group full-width">
+                            <label for="address">
+                                <i class="fas fa-map-pin"></i>
+                                公司地址
+                            </label>
+                            <input type="text" v-model="currentJob.address" class="form-control" placeholder="详细的公司地址">
+                        </div>
+
+                        <!-- 第5行 -->
+                        <div class="form-group full-width">
+                            <label>
+                                <i class="fas fa-tags"></i>
+                                职位标签
+                            </label>
+                            <div class="tag-input">
+                                <span v-for="(tag, index) in currentJob.tags" :key="index" class="tag-item">
+                                    {{ tag }}
+                                    <span class="tag-remove" @click="removeTag(index)">×</span>
+                                </span>
+                                <input type="text" v-model="newTag" placeholder="输入标签后按回车" @keydown.enter="addTag">
+                            </div>
+                        </div>
+
+                        <!-- 第6行 -->
+                        <div class="form-group full-width">
+                            <label for="description">
+                                <i class="fas fa-file-alt"></i>
+                                职位描述
+                            </label>
+                            <textarea v-model="currentJob.description" class="form-control"
+                                placeholder="详细的职位描述..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @click="closeModal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button class="btn btn-primary" @click="saveJob">
+                        <i class="fas fa-save"></i> {{ isNewJob ? '添加职位' : '保存修改' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                jobs: [],
+                currentJob: {},
+                showModal: false,
+                isNewJob: false,
+                newTag: '',
+                selectedJobs: [],
+                searchQuery: '',
+                activeFilter: 'all',
+                currentPage: 1,
+                itemsPerPage: 10,
+                loading: true,
+                sortField: 'id',
+                sortDirection: 'asc',
+                educationOptions: ['不限', '大专', '本科', '硕士', '博士'],
+                statusLabels: {
+                    active: '招聘中',
+                    pending: '待审核',
+                    closed: '已关闭'
+                },
+                filters: [
+                    { label: '全部职位', value: 'all', icon: 'fas fa-list' },
+                    { label: '技术类', value: 'tech', icon: 'fas fa-laptop-code' },
+                    { label: '产品类', value: 'product', icon: 'fas fa-box-open' },
+                    { label: '设计类', value: 'design', icon: 'fas fa-palette' },
+                    { label: '运营类', value: 'operation', icon: 'fas fa-chart-line' },
+                    { label: '市场类', value: 'marketing', icon: 'fas fa-bullhorn' },
+                    { label: '高级职位', value: 'senior', icon: 'fas fa-crown' },
+                    { label: '急聘岗位', value: 'urgent', icon: 'fas fa-bolt' }
+                ]
+            },
+            computed: {
+                // 计算过滤和排序后的工作
+                filteredJobs() {
+                    let filtered = this.jobs;
+
+                    // 搜索过滤
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(job =>
+                            job.name.toLowerCase().includes(query) ||
+                            job.company.toLowerCase().includes(query) ||
+                            job.area.toLowerCase().includes(query)
+                        );
+                    }
+
+                    // 状态过滤
+                    if (this.activeFilter !== 'all') {
+                        filtered = filtered.filter(job => job.status === this.activeFilter);
+                    }
+
+                    // 排序
+                    return filtered.sort((a, b) => {
+                        let modifier = 1;
+                        if (this.sortDirection === 'desc') modifier = -1;
+
+                        if (a[this.sortField] < b[this.sortField]) return -1 * modifier;
+                        if (a[this.sortField] > b[this.sortField]) return 1 * modifier;
+                        return 0;
+                    });
+                },
+
+                // 计算分页后的工作
+                paginatedJobs() {
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.filteredJobs.slice(start, end);
+                },
+
+                // 计算总页数
+                totalPages() {
+                    return Math.ceil(this.filteredJobs.length / this.itemsPerPage);
+                },
+
+                // 全选计算属性
+                selectAll: {
+                    get() {
+                        return this.jobs.length > 0 && this.selectedJobs.length === this.jobs.length;
+                    },
+                    set(value) {
+                        this.selectedJobs = value ? this.jobs.map(job => job.id) : [];
+                    }
+                }
+            },
+            methods: {
+                // 生成模拟数据
+                // generateMockJobs() {
+                //     const jobTitles = [
+                //         '高级前端开发工程师', 'Java后端开发工程师', '产品经理', 'UI设计师',
+                //         '数据科学家', 'DevOps工程师', '网络安全专家', '移动端开发工程师',
+                //         '测试工程师', '架构师', '项目经理', '运维工程师'
+                //     ];
+
+                //     const companies = [
+                //         '腾讯科技有限公司', '阿里巴巴集团', '字节跳动', '美团科技',
+                //         '百度科技', '华为技术有限公司', '奇安信科技', '滴滴出行',
+                //         '京东科技', '小米科技', '网易公司', '拼多多'
+                //     ];
+
+                //     const areas = [
+                //         '北京海淀区', '北京朝阳区', '上海浦东新区', '上海徐汇区',
+                //         '深圳南山区', '深圳龙岗区', '杭州西湖区', '广州天河区',
+                //         '成都高新区', '武汉光谷', '南京鼓楼区', '西安高新区'
+                //     ];
+
+                //     const salaries = [
+                //         '15K-25K', '20K-30K', '25K-40K', '30K-45K',
+                //         '35K-50K', '40K-60K', '50K-70K', '60K-80K'
+                //     ];
+
+                //     const tags = [
+                //         ['六险一金', '带薪年假', '弹性工作'],
+                //         ['年终奖', '餐补', '交通补贴'],
+                //         ['股票期权', '技术培训', '年度旅游'],
+                //         ['住房补贴', '免费班车', '健康体检'],
+                //         ['安全津贴', '保密奖金', '团队建设']
+                //     ];
+
+                //     const descriptions = [
+                //         '负责公司核心产品的前端开发工作，优化前端性能，提升用户体验。需要精通Vue/React框架，熟悉Webpack等构建工具。',
+                //         '参与大型分布式系统的设计、开发和维护，负责高并发、高可用系统的架构设计和优化。',
+                //         '负责产品规划、设计和迭代，分析用户需求，制定产品策略，协调研发团队完成产品开发。',
+                //         '负责公司产品的UI设计，包括Web端和移动端，提供高质量的设计方案和原型。',
+                //         '利用数据挖掘和机器学习技术解决业务问题，构建预测模型，提供数据驱动的决策支持。'
+                //     ];
+
+                //     const statuses = ['active', 'pending', 'closed'];
+
+                //     // 生成100条职位数据
+                //     for (let i = 1; i <= 100; i++) {
+                //         const randomJob = jobTitles[Math.floor(Math.random() * jobTitles.length)];
+                //         const randomCompany = companies[Math.floor(Math.random() * companies.length)];
+                //         const randomArea = areas[Math.floor(Math.random() * areas.length)];
+
+                //         this.jobs.push({
+                //             id: i,
+                //             name: `${randomJob}${i}`,
+                //             company: randomCompany,
+                //             salary: salaries[Math.floor(Math.random() * salaries.length)],
+                //             education: this.educationOptions[Math.floor(Math.random() * this.educationOptions.length)],
+                //             area: randomArea,
+                //             status: statuses[Math.floor(Math.random() * statuses.length)],
+                //             address: `${randomArea}${randomCompany.substring(0, 4)}大厦`,
+                //             tags: [...tags[Math.floor(Math.random() * tags.length)]],
+                //             description: descriptions[Math.floor(Math.random() * descriptions.length)]
+                //         });
+                //     }
+                // },
+
+                async queryJobList() {
+                    try {
+                        // 使用 Axios 替代 $.ajax
+                        const response = await axios.get('/api/boss/list', {
+                            params: {  // 更清晰的参数传递方式
+                                page: 1,
+                                pageSize: 9999
+                            }
+                        });
+
+                        // 直接映射到 jobs 数组
+                        this.jobs = response.data.list.map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            company: item.company,
+                            salary: item.salary,
+                            education: item.degree,
+                            area: item.area,
+                            status: item.status,
+                            matchDegree:item.match_degree,
+                            createTime:item.create_time,
+                            address: item.address,
+                            tags: item.tags,
+                            description: item.desc  // 注意原接口返回的是 "desc" 不是 "description"
+                        }));
+
+                        console.log('职位数据加载成功', this.jobs);
+                    } catch (error) {
+                        console.error('请求失败:', error);
+                        // 可在此处添加错误处理逻辑，如显示提示信息
+                        throw error; // 重新抛出错误供调用方处理
+                    }
+                },
+
+                // 打开编辑弹窗
+                openEditModal(job) {
+                    if (job) {
+                        // 深拷贝当前工作对象
+                        this.currentJob = JSON.parse(JSON.stringify(job));
+                        this.isNewJob = false;
+                    } else {
+                        // 创建新职位
+                        this.currentJob = {
+                            id: this.jobs.length + 1,
+                            name: '',
+                            company: '',
+                            salary: '15K-25K',
+                            education: '本科',
+                            area: '',
+                            status: 'active',
+                            address: '',
+                            tags: [],
+                            description: ''
+                        };
+                        this.isNewJob = true;
+                    }
+                    this.showModal = true;
+                    this.newTag = '';
+                },
+
+                // 关闭弹窗
+                closeModal() {
+                    this.showModal = false;
+                },
+
+                // 保存职位
+                saveJob() {
+                    if (this.isNewJob) {
+                        // 添加新职位
+                        this.jobs.unshift(this.currentJob);
+                    } else {
+                        // 更新现有职位
+                        const index = this.jobs.findIndex(j => j.id === this.currentJob.id);
+                        if (index !== -1) {
+                            Vue.set(this.jobs, index, this.currentJob);
+                        }
+                    }
+                    this.closeModal();
+                },
+
+                // 删除职位
+                deleteJob(id) {
+                    if (confirm('确定要删除这个职位吗？')) {
+                        this.jobs = this.jobs.filter(job => job.id !== id);
+                        // 从选中列表中移除
+                        this.selectedJobs = this.selectedJobs.filter(jobId => jobId !== id);
+                    }
+                },
+
+                // 添加标签
+                addTag() {
+                    if (this.newTag.trim() && !this.currentJob.tags.includes(this.newTag.trim())) {
+                        this.currentJob.tags.push(this.newTag.trim());
+                        this.newTag = '';
+                    }
+                },
+
+                // 移除标签
+                removeTag(index) {
+                    this.currentJob.tags.splice(index, 1);
+                },
+
+                // 设置筛选条件
+                setFilter(filter) {
+                    this.activeFilter = filter;
+                    this.currentPage = 1;
+                },
+
+                // 搜索工作
+                searchJobs() {
+                    this.currentPage = 1;
+                },
+
+                // 重置筛选
+                resetFilters() {
+                    this.searchQuery = '';
+                    this.activeFilter = 'all';
+                    this.currentPage = 1;
+                },
+
+                // 导出数据
+                exportData() {
+                    alert(`成功导出 ${this.jobs.length} 条职位数据！`);
+                },
+
+                // 设置排序字段
+                sortBy(field) {
+                    if (this.sortField === field) {
+                        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortField = field;
+                        this.sortDirection = 'asc';
+                    }
+                },
+
+                // 设置当前页
+                setPage(page) {
+                    this.currentPage = page;
+                },
+
+                // 上一页
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                },
+
+                // 下一页
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                    }
+                },
+
+                // 全选/取消全选
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        this.selectedJobs = this.jobs.map(job => job.id);
+                    } else {
+                        this.selectedJobs = [];
+                    }
+                },
+
+                // 模拟数据加载
+                simulateLoading() {
+                    this.loading = true;
+                    setTimeout(() => {
+                        // this.generateMockJobs();
+                        this.queryJobList();
+                        this.loading = false;
+                    }, 1500);
+                }
+            },
+            mounted() {
+                this.simulateLoading();
+            }
+        });
+    </script>
+</body>
+
+</html>
